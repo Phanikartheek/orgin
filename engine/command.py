@@ -1,128 +1,98 @@
 import pyttsx3
 import speech_recognition as sr
-import time
 import eel
-import webbrowser
-import pywhatkit  # optional for YouTube play
-
-# ------------------- Initialize Eel -------------------
-eel.init('web')  # Replace 'web' with your HTML folder
-
-# ------------------- Text-to-Speech -------------------
+import time
 def speak(text):
-    """
-    Convert text to speech using pyttsx3 and optionally display it in Eel.
-    """
-    try:
-        engine = pyttsx3.init('sapi5')
-        voices = engine.getProperty('voices')
-        engine.setProperty('voice', voices[0].id)
-        engine.setProperty('rate', 174)
-        try:
-            eel.DisplayMessage(text)
-        except:
-            print(f"[EEL] {text}")
-        engine.say(text)
-        engine.runAndWait()
-    except Exception as e:
-        print(f"[TTS ERROR] {e}")
+    text = str(text)
+    engine = pyttsx3.init('sapi5')
+    voices = engine.getProperty('voices') 
+    engine.setProperty('voice', voices[0].id)
+    engine.setProperty('rate', 174)
+    eel.DisplayMessage(text)
+    engine.say(text)
+    eel.receiverText(text)
+    engine.runAndWait()
 
-# ------------------- Speech Recognition -------------------
-def takecommand(timeout=10, phrase_time_limit=6):
-    """
-    Listen to microphone input and return recognized text.
-    Returns empty string if recognition fails.
-    """
+
+def takecommand():
+
     r = sr.Recognizer()
+
+    with sr.Microphone() as source:
+        print('listening....')
+        eel.DisplayMessage('listening....')
+        r.pause_threshold = 1
+        r.adjust_for_ambient_noise(source)
+        
+        audio = r.listen(source, 10, 6)
+
     try:
-        with sr.Microphone() as source:
-            print("[INFO] Listening...")
-            try:
-                eel.DisplayMessage('Listening...')
-            except:
-                pass
-
-            r.pause_threshold = 1
-            r.adjust_for_ambient_noise(source, duration=1)
-            audio = r.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
-
-        print("[INFO] Recognizing...")
-        try:
-            eel.DisplayMessage('Recognizing...')
-        except:
-            pass
-
+        print('recognizing')
+        eel.DisplayMessage('recognizing....')
         query = r.recognize_google(audio, language='en-in')
-        print(f"[USER] {query}")
-        try:
-            eel.DisplayMessage(query)
-        except:
-            pass
-        return query.lower()
-
-    except sr.WaitTimeoutError:
-        print("[WARN] Listening timed out")
-    except sr.RequestError:
-        print("[ERROR] Could not request results from Google Speech Recognition")
-    except sr.UnknownValueError:
-        print("[WARN] Could not understand audio")
+        print(f"user said: {query}")
+        eel.DisplayMessage(query)
+        time.sleep(2)
+       
     except Exception as e:
-        print(f"[ERROR] {e}")
+        return ""
     
-    return ""  # return empty string if anything fails
+    return query.lower()
 
-# ------------------- Feature Functions -------------------
-def openCommand(query):
-    """Open websites or apps based on user query"""
-    try:
-        if "youtube" in query:
-            webbrowser.open("https://www.youtube.com")
-            speak("Opening YouTube")
-        elif "google" in query:
-            webbrowser.open("https://www.google.com")
-            speak("Opening Google")
-        else:
-            speak("I can't open that")
-    except Exception as e:
-        print(f"[ERROR] {e}")
-
-def PlayYoutube(query):
-    """Play YouTube videos using pywhatkit"""
-    try:
-        song = query.replace("on youtube", "").replace("play", "").strip()
-        pywhatkit.playonyt(song)
-        speak(f"Playing {song} on YouTube")
-    except Exception as e:
-        print(f"[ERROR] {e}")
-
-# ------------------- Commands Handler -------------------
 @eel.expose
-def allCommands():
-    """
-    Eel-exposed function that listens to command and executes it.
-    """
-    query = takecommand()
-    if not query:
-        print("[INFO] No command detected")
-        return
+def allCommands(message=1):
 
+    if message == 1:
+        query = takecommand()
+        print(query)
+        eel.senderText(query)
+    else:
+        query = message
+        eel.senderText(query)
     try:
+
         if "open" in query:
+            from engine.features import openCommand
             openCommand(query)
-        elif "on youtube" in query or "play" in query:
+        elif "on youtube" in query:
+            from engine.features import PlayYoutube
             PlayYoutube(query)
+        
+        elif "send message" in query or "phone call" in query or "video call" in query:
+            from engine.features import findContact, whatsApp, makeCall, sendMessage
+            contact_no, name = findContact(query)
+            if(contact_no != 0):
+                speak("Which mode you want to use whatsapp or mobile")
+                preferance = takecommand()
+                print(preferance)
+
+                if "mobile" in preferance:
+                    if "send message" in query or "send sms" in query: 
+                        speak("what message to send")
+                        message = takecommand()
+                        sendMessage(message, contact_no, name)
+                    elif "phone call" in query:
+                        makeCall(name, contact_no)
+                    else:
+                        speak("please try again")
+                elif "whatsapp" in preferance:
+                    message = ""
+                    if "send message" in query:
+                        message = 'message'
+                        speak("what message to send")
+                        query = takecommand()
+                                        
+                    elif "phone call" in query:
+                        message = 'call'
+                    else:
+                        message = 'video call'
+                                        
+                    whatsApp(contact_no, query, message, name)
+
         else:
-            speak("Command not recognized")
-            print("[INFO] Command not recognized")
-    except Exception as e:
-        print(f"[ERROR] Command execution failed: {e}")
-
-    # Show Hood in UI if available
-    try:
-        eel.ShowHood()
+            from engine.features import geminai
+            geminai(query)
     except:
-        pass
-
-# ------------------- Start Eel -------------------
-if __name__ == "__main__":                                                                                                                                                                                                                                                                                                     
-    eel.start('index.html', size=(800, 600), block=True)
+        print("error")
+    
+    eel.ShowHood()
