@@ -31,20 +31,17 @@ cursor = con.cursor()
 
 # Specify the column indices you want to import (0-based index)
 # Example: Importing the 1st and 3rd columns
-desired_columns_indices = [0, 6]
+# desired_columns_indices = [0, 6]
 
 # # Read data from CSV and insert into SQLite table for the desired columns
-with open('contacts.csv', 'r', encoding='utf-8') as csvfile:
-     csvreader = csv.reader(csvfile)
-     for row in csvreader:
-         selected_data = [row[i] for i in desired_columns_indices]
-         cursor.execute(''' INSERT INTO contacts (id, 'name', 'mobile_no') VALUES (null, ?, ?);''', tuple(selected_data))
+# with open('contacts.csv', 'r', encoding='utf-8') as csvfile:
+     # csvreader = csv.reader(csvfile)
+     # for row in csvreader:
+         # selected_data = [row[i] for i in desired_columns_indices]
+         # cursor.execute(''' INSERT INTO contacts (id, 'name', 'mobile_no') VALUES (null, ?, ?);''', tuple(selected_data))
 
 # # Commit changes and close connection
-con.commit()
-con.close()
-
-
-
+# con.commit()
+# con.close()
 
 
