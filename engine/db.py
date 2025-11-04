@@ -44,4 +44,14 @@ cursor = con.cursor()
 # con.commit()
 # con.close()
 
+# query = "INSERT INTO contacts VALUES (null, 'pawan', '1234567890', 'example@email.com', 'Some Address')"
+# cursor.execute(query)
+# con.commit()
+
+# query = 'kunal'
+# query = query.strip().lower()
+
+# cursor.execute("SELECT mobile_no FROM contacts WHERE LOWER(name) LIKE ? OR LOWER(name) LIKE ?", ('%' + query + '%', query + '%'))
+# results = cursor.fetchall()
+# print(results[0][0])
 

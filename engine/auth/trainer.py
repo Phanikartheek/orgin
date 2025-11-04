@@ -6,7 +6,7 @@ import os
 path = 'engine\\auth\\samples' # Path for samples already taken
 
 recognizer = cv2.face.LBPHFaceRecognizer_create() # Local Binary Patterns Histograms
-detector = cv2.CascadeClassifier("engine\\auth\\haarcascade_frontalface_default.xml")
+detector = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 #Haar Cascade classifier is an effective object detection approach
 
 
