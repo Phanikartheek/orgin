@@ -17,12 +17,9 @@ google-genai>=1.14.0
 edge-tts>=6.1.0
 # Removed PyAudio and SpeechRecognition for Render deployment (requires portaudio)
 
-# --- Face Authentication ---
-opencv-contrib-python>=4.10.0
-
-# --- Automation ---
-pywhatkit>=5.4
-pyautogui>=0.9.54
+# --- Automation (Optional for Local, Skip for Cloud) ---
+# pywhatkit>=5.4
+# pyautogui>=0.9.54
 
 # --- Utilities ---
 numpy>=1.26.0

@@ -24,15 +24,23 @@ async def lifespan(app: FastAPI):
     print("\n" + "=" * 50)
     print("  🤖 JARVIS AI Assistant — Starting Up")
     print("=" * 50)
-    init_database()
-
-    # Copy existing database if it exists in old location
-    old_db = os.path.join(os.path.dirname(FRONTEND_DIR), "jarvis.db")
-    if os.path.exists(old_db) and not os.path.exists(DB_PATH):
-        import shutil
+    
+    try:
+        # Ensure database directory exists
         os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        shutil.copy2(old_db, DB_PATH)
-        print("[DB] Migrated existing database.")
+        
+        # Initialize database
+        init_database()
+
+        # Copy existing database if it exists in old location
+        old_db = os.path.join(os.path.dirname(FRONTEND_DIR), "jarvis.db")
+        if os.path.exists(old_db) and not os.path.exists(DB_PATH):
+            import shutil
+            shutil.copy2(old_db, DB_PATH)
+            print("[DB] Migrated existing database.")
+    except Exception as e:
+        print(f"[Startup Error] Non-critical error during initialization: {e}")
+        print("Continuing startup anyway...")
 
     print(f"  🌐 Open http://{HOST}:{PORT} in your browser")
     print("=" * 50 + "\n")
