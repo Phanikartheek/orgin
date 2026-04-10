@@ -3,8 +3,8 @@ System Control Tools
 Gemini calls these for system-level operations.
 """
 
-import os
 import datetime
+from app.config import IS_CLOUD
 
 
 def get_current_time() -> str:
@@ -30,7 +30,11 @@ def set_system_volume(level: int) -> str:
     Args:
         level: Volume level from 0 (mute) to 100 (maximum)
     """
+    if IS_CLOUD:
+        return f"[Cloud Demo Mode] I would have set your computer's volume to {level}%."
+
     try:
+        import os
         # Clamp to valid range
         level = max(0, min(100, level))
         # Convert 0-100 to 0-65535 range for Windows
@@ -47,8 +51,12 @@ def take_screenshot() -> str:
     """Take a screenshot of the current screen.
     Use this when the user wants to capture their screen.
     """
+    if IS_CLOUD:
+        return "[Cloud Demo Mode] I would have taken a screenshot of your screen."
+
     try:
         import pyautogui
+        import os
         from app.config import DATA_DIR
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

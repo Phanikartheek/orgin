@@ -1,10 +1,10 @@
-"""
-YouTube Tools
-Gemini calls these to play videos and music on YouTube.
-"""
+try:
+    import pywhatkit
+    HAS_PYWHATKIT = True
+except ImportError:
+    HAS_PYWHATKIT = False
 
-import os
-import pywhatkit
+from app.config import IS_CLOUD
 
 
 def play_youtube(search_query: str) -> str:
@@ -15,6 +15,9 @@ def play_youtube(search_query: str) -> str:
     Args:
         search_query: What to search for on YouTube (e.g., 'lofi hip hop music', 'Python tutorial')
     """
+    if IS_CLOUD or not HAS_PYWHATKIT:
+        return f"[Cloud Demo Mode] I would have opened YouTube and played: '{search_query}'"
+
     try:
         # Use pywhatkit to find and play the first video matching the query directly
         pywhatkit.playonyt(search_query)

@@ -137,6 +137,33 @@ body {
     padding: 0 20px;
 }
 
+/* --- Cloud Demo Banner --- */
+.demo-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(90deg, rgba(255, 107, 53, 0.1), rgba(255, 179, 71, 0.1));
+    border: 1px solid rgba(255, 107, 53, 0.2);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    color: var(--primary-light);
+    font-weight: 500;
+    margin-bottom: 8px;
+    animation: slideInDown 0.5s ease-out;
+    backdrop-filter: blur(10px);
+}
+
+.demo-banner svg {
+    color: var(--primary);
+}
+
+@keyframes slideInDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 /* --- Header --- */
 .app-header {
     display: flex;

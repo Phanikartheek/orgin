@@ -1,19 +1,25 @@
-"""
-Speech-to-Text Module
-Uses Google Speech Recognition for converting speech to text.
-"""
+try:
+    import speech_recognition as sr
+    HAS_SR = True
+except ImportError:
+    HAS_SR = False
 
-import speech_recognition as sr
-from app.config import STT_LANGUAGE
+from app.config import STT_LANGUAGE, IS_CLOUD
 
 
 class SpeechToText:
     """Handles microphone input and speech recognition."""
 
     def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.recognizer.pause_threshold = 1
-        self.recognizer.energy_threshold = 300
+        if HAS_SR and not IS_CLOUD:
+            try:
+                self.recognizer = sr.Recognizer()
+                self.recognizer.pause_threshold = 1
+                self.recognizer.energy_threshold = 300
+            except Exception:
+                self.recognizer = None
+        else:
+            self.recognizer = None
 
     def listen(self, timeout: int = 10, phrase_limit: int = 8) -> str:
         """
@@ -26,6 +32,9 @@ class SpeechToText:
         Returns:
             Transcribed text or empty string if failed
         """
+        if not self.recognizer:
+            return "voice_input_disabled"
+
         try:
             with sr.Microphone() as source:
                 print("[STT] Adjusting for ambient noise...")

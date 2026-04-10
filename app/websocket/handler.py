@@ -12,6 +12,9 @@ from app.voice.stt import SpeechToText
 from app.voice.tts import TextToSpeech
 
 
+from app.config import IS_CLOUD
+
+
 class ConnectionManager:
     """Manages active WebSocket connections."""
 
@@ -25,6 +28,13 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections.append(websocket)
         print("[WS] Client connected")
+
+        # Send server capabilities/info
+        await self.send_json(websocket, {
+            "type": "connection_info",
+            "is_cloud": IS_CLOUD,
+            "message": "Welcome to Jarvis Web Demo" if IS_CLOUD else "Jarvis is ready, Sir."
+        })
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)

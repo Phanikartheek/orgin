@@ -21,8 +21,12 @@ TTS_RATE: str = "+10%"              # Speech rate adjustment
 STT_LANGUAGE: str = "en-in"         # Speech recognition language
 
 # --- Server Settings ---
-HOST: str = "localhost"
-PORT: int = 8000
+HOST: str = "0.0.0.0" if os.getenv("RENDER") else "localhost"
+PORT: int = int(os.getenv("PORT", 8000))
+
+# --- Cloud Detection (For Recruiter Demo) ---
+# We detect if we are on Render or similar to disable desktop-only features
+IS_CLOUD: bool = True if os.getenv("RENDER") or os.getenv("K_SERVICE") else False
 
 # --- Paths ---
 BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

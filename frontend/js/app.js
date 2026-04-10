@@ -18,6 +18,21 @@
                     ui.showToast('Connected to Jarvis');
                 } else {
                     ui.setStatus('AI Assistant — Disconnected');
+                    // Hide demo banner on disconnect
+                    document.getElementById('demoModeBanner').classList.add('hidden');
+                }
+                break;
+
+            case 'connection_info':
+                if (data.is_cloud) {
+                    ui.setStatus('AI Assistant — Web Demo');
+                    document.getElementById('demoModeBanner').classList.remove('hidden');
+                } else {
+                    ui.setStatus('AI Assistant — Connected');
+                    document.getElementById('demoModeBanner').classList.add('hidden');
+                }
+                if (data.message) {
+                    ui.showToast(data.message);
                 }
                 break;
 
@@ -32,7 +47,13 @@
                 break;
 
             case 'user_message':
-                ui.addUserMessage(data.text);
+                if (data.text === "voice_input_disabled") {
+                    ui.showToast('Voice input is disabled in Web Demo. Please type your message.', 5000);
+                    ui.setOrbState('idle');
+                    ui.setStatus('AI Assistant — Web Demo');
+                } else {
+                    ui.addUserMessage(data.text);
+                }
                 break;
 
             case 'assistant_message':

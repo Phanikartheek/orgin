@@ -8,9 +8,13 @@ import time
 import subprocess
 import sqlite3
 from urllib.parse import quote
-from app.config import DB_PATH
+try:
+    import pyautogui
+    HAS_GUI = True
+except ImportError:
+    HAS_GUI = False
 
-import pyautogui
+from app.config import DB_PATH, IS_CLOUD
 
 
 def _find_contact_number(name: str) -> str | None:
@@ -47,6 +51,9 @@ def send_whatsapp_message(contact_name: str, message: str) -> str:
     if not mobile_no:
         return f"Contact '{contact_name}' not found in your contacts."
 
+    if IS_CLOUD or not HAS_GUI:
+        return f"[Cloud Demo Mode] I would have sent a WhatsApp message to {contact_name} with: '{message}'"
+
     try:
         encoded_message = quote(message)
         whatsapp_url = f"whatsapp://send?phone={mobile_no}&text={encoded_message}"
@@ -80,6 +87,9 @@ def make_whatsapp_call(contact_name: str) -> str:
     if not mobile_no:
         return f"Contact '{contact_name}' not found in your contacts."
 
+    if IS_CLOUD or not HAS_GUI:
+        return f"[Cloud Demo Mode] I would have started a WhatsApp voice call with {contact_name}."
+
     try:
         whatsapp_url = f"whatsapp://send?phone={mobile_no}"
         full_command = f'start "" "{whatsapp_url}"'
@@ -111,6 +121,9 @@ def make_whatsapp_video_call(contact_name: str) -> str:
     mobile_no = _find_contact_number(contact_name)
     if not mobile_no:
         return f"Contact '{contact_name}' not found in your contacts."
+
+    if IS_CLOUD or not HAS_GUI:
+        return f"[Cloud Demo Mode] I would have started a WhatsApp video call with {contact_name}."
 
     try:
         whatsapp_url = f"whatsapp://send?phone={mobile_no}"
@@ -144,6 +157,9 @@ def make_phone_call(contact_name: str) -> str:
     if not mobile_no:
         return f"Contact '{contact_name}' not found in your contacts."
 
+    if IS_CLOUD:
+        return f"[Cloud Demo Mode] I would have made a phone call to {contact_name} via ADB."
+
     try:
         clean_number = mobile_no.replace(" ", "")
         command = f"adb shell am start -a android.intent.action.CALL -d tel:{clean_number}"
@@ -164,6 +180,9 @@ def send_sms(contact_name: str, message: str) -> str:
     mobile_no = _find_contact_number(contact_name)
     if not mobile_no:
         return f"Contact '{contact_name}' not found in your contacts."
+
+    if IS_CLOUD:
+        return f"[Cloud Demo Mode] I would have sent an SMS to {contact_name} with: '{message}'"
 
     try:
         from app.agent.tools._adb_helpers import goback, keyEvent, tapEvents, adbInput

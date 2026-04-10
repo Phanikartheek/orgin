@@ -6,7 +6,8 @@ Gemini calls these to open applications and websites.
 import os
 import webbrowser
 import sqlite3
-from app.config import DB_PATH
+import webbrowser
+from app.config import DB_PATH, IS_CLOUD
 
 
 def open_application(app_name: str) -> str:
@@ -17,6 +18,9 @@ def open_application(app_name: str) -> str:
     Args:
         app_name: The name of the application to open (e.g., 'notepad', 'calculator', 'chrome')
     """
+    if IS_CLOUD:
+        return f"[Cloud Demo Mode] I would have opened the '{app_name}' application on your computer."
+
     # Common Windows applications mapping
     common_apps = {
         "notepad": "notepad.exe",
@@ -73,6 +77,9 @@ def open_website(url: str) -> str:
     Args:
         url: The website URL to open (e.g., 'https://google.com', 'github.com')
     """
+    if IS_CLOUD:
+        return f"[Cloud Demo Mode] I would have opened the website '{url}' in your browser."
+
     # Add https:// if not present
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
