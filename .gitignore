@@ -1,5 +1,24 @@
-/envjarvis
-contacts.csv
-jarvis.db
-/engine/__pycache__
-/engine/cookies.json
+# Environment
+.env
+envjarvis/
+__pycache__/
+*.pyc
+
+# Data
+data/
+*.db
+
+# Generated audio
+frontend/assets/audio/tts_*.mp3
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Legacy backup
+legacy/

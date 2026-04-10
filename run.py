@@ -1,33 +1,31 @@
- 
+"""
+Jarvis AI-Native Voice Assistant
+Entry point — starts the FastAPI server.
+"""
 
-import multiprocessing
-import subprocess
-
-# To run Jarvis
-def startJarvis():
-        # Code for process 1
-        print("Process 1 is running.")
-        from main import start
-        start()
-
-# To run hotword
-def listenHotword():
-        # Code for process 2
-        print("Process 2 is running.")
-        from engine.features import hotword
-        hotword()
+import os
+import webbrowser
+import threading
+import uvicorn
+from app.config import HOST, PORT
 
 
-    # Start both processes
-if __name__ == '__main__':
-        p1 = multiprocessing.Process(target=startJarvis)
-        p2 = multiprocessing.Process(target=listenHotword)
-        p1.start()
-        p2.start()
-        p1.join()
+def open_browser():
+    """Open the browser after a short delay to let the server start."""
+    import time
+    time.sleep(2)
+    webbrowser.open(f"http://{HOST}:{PORT}")
 
-        if p2.is_alive():
-            p2.terminate()
-            p2.join()
 
-        print("system stop")
+if __name__ == "__main__":
+    # Open browser in a separate thread
+    threading.Thread(target=open_browser, daemon=True).start()
+
+    # Start the FastAPI server
+    uvicorn.run(
+        "app.main:app",
+        host=HOST,
+        port=PORT,
+        reload=False,
+        log_level="info",
+    )
