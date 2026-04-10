@@ -15,8 +15,7 @@ google-genai>=1.14.0
 
 # --- Voice Pipeline ---
 edge-tts>=6.1.0
-SpeechRecognition>=3.12.0
-PyAudio>=0.2.13
+# Removed PyAudio and SpeechRecognition for Render deployment (requires portaudio)
 
 # --- Face Authentication ---
 opencv-contrib-python>=4.10.0
