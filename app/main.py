@@ -12,7 +12,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from app.config import FRONTEND_DIR, DB_PATH, HOST, PORT
+from app.config import FRONTEND_DIR, DB_PATH, HOST, PORT, IS_CLOUD
 from app.database.db import init_database, get_connection
 from app.websocket.handler import manager
 
