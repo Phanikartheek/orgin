@@ -18,8 +18,9 @@ def open_browser():
 
 
 if __name__ == "__main__":
-    # Open browser in a separate thread
-    threading.Thread(target=open_browser, daemon=True).start()
+    # Open browser in a separate thread (LOCAL ONLY)
+    if not os.getenv("RENDER") and not os.getenv("PORT") and not os.getenv("K_SERVICE"):
+        threading.Thread(target=open_browser, daemon=True).start()
 
     # Start the FastAPI server
     uvicorn.run(

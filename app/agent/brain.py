@@ -81,7 +81,7 @@ class JarvisBrain:
     def __init__(self):
         self.client = genai.Client(api_key=GEMINI_API_KEY)
         self.memory = ConversationMemory()
-        self.model = "gemini-2.5-flash"
+        self.model = "gemini-1.5-flash"
 
     async def think(self, user_input: str) -> str:
         """

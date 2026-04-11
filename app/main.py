@@ -42,7 +42,11 @@ async def lifespan(app: FastAPI):
         print(f"[Startup Error] Non-critical error during initialization: {e}")
         print("Continuing startup anyway...")
 
-    print(f"  🌐 Open http://{HOST}:{PORT} in your browser")
+    print(f"  🌐 Server running on: http://{HOST}:{PORT}")
+    if IS_CLOUD:
+        print("  ☁️  Cloud environment detected (Render/Production)")
+    else:
+        print("  🏠 Local environment detected")
     print("=" * 50 + "\n")
 
     yield
