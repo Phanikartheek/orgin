@@ -79,7 +79,11 @@ class JarvisBrain:
     """The AI brain that processes user queries and decides actions."""
 
     def __init__(self):
-        self.client = genai.Client(api_key=GEMINI_API_KEY)
+        try:
+            self.client = genai.Client(api_key=GEMINI_API_KEY)
+        except Exception as e:
+            print(f"[Brain Error] Failed to initialize Gemini client: {e}")
+            self.client = None
         self.memory = ConversationMemory()
         self.model = "gemini-1.5-flash"
 

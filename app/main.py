@@ -4,8 +4,6 @@ Main application entry point that serves the frontend and WebSocket API.
 """
 
 import os
-import json
-import sqlite3
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request

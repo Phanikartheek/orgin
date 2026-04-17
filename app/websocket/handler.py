@@ -20,10 +20,16 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: list[WebSocket] = []
-        self.brain = JarvisBrain()
-        self.stt = SpeechToText()
-        self.tts = TextToSpeech()
-
+        try:
+            self.brain = JarvisBrain()
+            self.stt = SpeechToText()
+            self.tts = TextToSpeech()
+        except Exception as e:
+            print(f"[WS Error] Failed to initialize connection manager components: {e}")
+            self.brain = None
+            self.stt = None
+            self.tts = None
+    
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
