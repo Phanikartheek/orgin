@@ -12,8 +12,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from app.config import FRONTEND_DIR, DB_PATH, HOST, PORT, IS_CLOUD
-from app.database.db import init_database, get_connection
+from app.config import FRONTEND_DIR, HOST, PORT, IS_CLOUD
+from app.database.db import get_client
 from app.websocket.handler import manager
 
 
@@ -26,20 +26,14 @@ async def lifespan(app: FastAPI):
     print("=" * 50)
     
     try:
-        # Ensure database directory exists
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        
-        # Initialize database
-        init_database()
-
-        # Copy existing database if it exists in old location
-        old_db = os.path.join(os.path.dirname(FRONTEND_DIR), "jarvis.db")
-        if os.path.exists(old_db) and not os.path.exists(DB_PATH):
-            import shutil
-            shutil.copy2(old_db, DB_PATH)
-            print("[DB] Migrated existing database.")
+        # Check Supabase connection
+        client = get_client()
+        if client:
+            print("[DB] Supabase connected.")
+        else:
+            print("[DB] Warning: Supabase client not initialized.")
     except Exception as e:
-        print(f"[Startup Error] Non-critical error during initialization: {e}")
+        print(f"[Startup Error] Database connectivity issue: {e}")
         print("Continuing startup anyway...")
 
     print(f"  🌐 Server running on: http://{HOST}:{PORT}")
@@ -102,15 +96,14 @@ async def websocket_endpoint(websocket: WebSocket):
 async def get_personal_info():
     """Get user's personal information."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT * FROM info")
-        result = cursor.fetchone()
-        con.close()
-        if result:
-            return {"data": {"name": result[0], "designation": result[1], "mobileno": result[2], "email": result[3], "city": result[4]}}
+        client = get_client()
+        response = client.table("info").select("*").limit(1).execute()
+        if response.data:
+            r = response.data[0]
+            return {"data": {"name": r.get("name"), "designation": r.get("designation"), "mobileno": r.get("mobileno"), "email": r.get("email"), "city": r.get("city")}}
         return {"data": None}
-    except Exception:
+    except Exception as e:
+        print(f"[API Error] get_personal_info: {e}")
         return {"data": None}
 
 
@@ -119,25 +112,28 @@ async def update_personal_info(request: Request):
     """Update user's personal information."""
     body = await request.json()
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT COUNT(*) FROM info")
-        count = cursor.fetchone()[0]
+        client = get_client()
+        # Since we only have one user/info row in this simple version, 
+        # we check for existing or just upsert if ID is known. 
+        # For simplicity, we'll fetch existing first or just assume ID 1.
+        response = client.table("info").select("id").limit(1).execute()
+        
+        data = {
+            "name": body["name"],
+            "designation": body["designation"],
+            "mobileno": body["mobileno"],
+            "email": body["email"],
+            "city": body["city"]
+        }
 
-        if count > 0:
-            cursor.execute(
-                "UPDATE info SET name=?, designation=?, mobileno=?, email=?, city=?",
-                (body["name"], body["designation"], body["mobileno"], body["email"], body["city"]),
-            )
+        if response.data:
+            client.table("info").update(data).eq("id", response.data[0]["id"]).execute()
         else:
-            cursor.execute(
-                "INSERT INTO info (name, designation, mobileno, email, city) VALUES (?, ?, ?, ?, ?)",
-                (body["name"], body["designation"], body["mobileno"], body["email"], body["city"]),
-            )
-        con.commit()
-        con.close()
+            client.table("info").insert(data).execute()
+            
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] update_personal_info: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -145,13 +141,11 @@ async def update_personal_info(request: Request):
 async def get_sys_commands():
     """Get all system commands."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT * FROM sys_command")
-        results = cursor.fetchall()
-        con.close()
-        return {"data": [{"id": r[0], "name": r[1], "path": r[2]} for r in results]}
-    except Exception:
+        client = get_client()
+        response = client.table("sys_command").select("*").execute()
+        return {"data": response.data or []}
+    except Exception as e:
+        print(f"[API Error] get_sys_commands: {e}")
         return {"data": []}
 
 
@@ -160,13 +154,11 @@ async def add_sys_command(request: Request):
     """Add a new system command."""
     body = await request.json()
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("INSERT INTO sys_command VALUES (?, ?, ?)", (None, body["name"], body["path"]))
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("sys_command").insert({"name": body["name"], "path": body["path"]}).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] add_sys_command: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -174,13 +166,11 @@ async def add_sys_command(request: Request):
 async def delete_sys_command(command_id: int):
     """Delete a system command."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM sys_command WHERE id = ?", (command_id,))
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("sys_command").delete().eq("id", command_id).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] delete_sys_command: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -188,13 +178,11 @@ async def delete_sys_command(command_id: int):
 async def get_web_commands():
     """Get all web commands."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT * FROM web_command")
-        results = cursor.fetchall()
-        con.close()
-        return {"data": [{"id": r[0], "name": r[1], "url": r[2]} for r in results]}
-    except Exception:
+        client = get_client()
+        response = client.table("web_command").select("*").execute()
+        return {"data": response.data or []}
+    except Exception as e:
+        print(f"[API Error] get_web_commands: {e}")
         return {"data": []}
 
 
@@ -203,13 +191,11 @@ async def add_web_command(request: Request):
     """Add a new web command."""
     body = await request.json()
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("INSERT INTO web_command VALUES (?, ?, ?)", (None, body["name"], body["url"]))
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("web_command").insert({"name": body["name"], "url": body["url"]}).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] add_web_command: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -217,13 +203,11 @@ async def add_web_command(request: Request):
 async def delete_web_command(command_id: int):
     """Delete a web command."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM web_command WHERE id = ?", (command_id,))
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("web_command").delete().eq("id", command_id).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] delete_web_command: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -231,13 +215,11 @@ async def delete_web_command(command_id: int):
 async def get_contacts():
     """Get all contacts."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT * FROM contacts")
-        results = cursor.fetchall()
-        con.close()
-        return {"data": [{"id": r[0], "name": r[1], "mobile_no": r[2], "email": r[3], "city": r[4]} for r in results]}
-    except Exception:
+        client = get_client()
+        response = client.table("contacts").select("*").execute()
+        return {"data": response.data or []}
+    except Exception as e:
+        print(f"[API Error] get_contacts: {e}")
         return {"data": []}
 
 
@@ -246,16 +228,16 @@ async def add_contact_api(request: Request):
     """Add a new contact."""
     body = await request.json()
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute(
-            "INSERT INTO contacts VALUES (?, ?, ?, ?, ?)",
-            (None, body["name"], body["mobile_no"], body.get("email", ""), body.get("city", "")),
-        )
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("contacts").insert({
+            "name": body["name"],
+            "mobile_no": body["mobile_no"],
+            "email": body.get("email", ""),
+            "city": body.get("city", "")
+        }).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] add_contact_api: {e}")
         return {"success": False, "error": str(e)}
 
 
@@ -263,11 +245,9 @@ async def add_contact_api(request: Request):
 async def delete_contact(contact_id: int):
     """Delete a contact."""
     try:
-        con = get_connection()
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
-        con.commit()
-        con.close()
+        client = get_client()
+        client.table("contacts").delete().eq("id", contact_id).execute()
         return {"success": True}
     except Exception as e:
+        print(f"[API Error] delete_contact: {e}")
         return {"success": False, "error": str(e)}

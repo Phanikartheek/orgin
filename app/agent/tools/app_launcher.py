@@ -1,13 +1,13 @@
 """
 App & Website Launcher Tools
 Gemini calls these to open applications and websites.
+Now using Supabase for custom app and bookmark lookups.
 """
 
 import os
 import webbrowser
-import sqlite3
-import webbrowser
-from app.config import DB_PATH, IS_CLOUD
+from app.config import IS_CLOUD
+from app.database.db import get_client
 
 
 def open_application(app_name: str) -> str:
@@ -50,15 +50,12 @@ def open_application(app_name: str) -> str:
 
     # Check database for custom app paths
     try:
-        con = sqlite3.connect(DB_PATH)
-        cursor = con.cursor()
-        cursor.execute("SELECT path FROM sys_command WHERE LOWER(name) LIKE ?", (f"%{app_lower}%",))
-        results = cursor.fetchall()
-        con.close()
-
-        if results:
-            os.startfile(results[0][0])
-            return f"Opened {app_name} successfully."
+        client = get_client()
+        if client:
+            response = client.table("sys_command").select("path").ilike("name", f"%{app_lower}%").execute()
+            if response.data:
+                os.startfile(response.data[0]["path"])
+                return f"Opened {app_name} successfully."
     except Exception:
         pass
 
@@ -86,15 +83,12 @@ def open_website(url: str) -> str:
 
     # Check database for saved bookmarks
     try:
-        con = sqlite3.connect(DB_PATH)
-        cursor = con.cursor()
-        url_lower = url.lower().replace("https://", "").replace("http://", "").replace("www.", "")
-        cursor.execute("SELECT url FROM web_command WHERE LOWER(name) LIKE ?", (f"%{url_lower}%",))
-        results = cursor.fetchall()
-        con.close()
-
-        if results:
-            url = results[0][0]
+        client = get_client()
+        if client:
+            url_query = url.lower().replace("https://", "").replace("http://", "").replace("www.", "")
+            response = client.table("web_command").select("url").ilike("name", f"%{url_query}%").execute()
+            if response.data:
+                url = response.data[0]["url"]
     except Exception:
         pass
 

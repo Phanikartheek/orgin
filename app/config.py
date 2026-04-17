@@ -11,6 +11,8 @@ load_dotenv()
 
 # --- API Keys ---
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
 
 # --- Assistant Settings ---
 ASSISTANT_NAME: str = os.getenv("ASSISTANT_NAME", "Jarvis")
@@ -33,7 +35,8 @@ IS_CLOUD: bool = True if (os.getenv("RENDER") or os.getenv("PORT") or os.getenv(
 BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR: str = os.path.join(BASE_DIR, "frontend")
 DATA_DIR: str = os.path.join(BASE_DIR, "data")
-DB_PATH: str = os.path.join(DATA_DIR, "jarvis.db")
+# DB_PATH is deprecated; using Supabase for persistence
+# DB_PATH: str = os.path.join(DATA_DIR, "jarvis.db")
 AUDIO_OUTPUT_DIR: str = os.path.join(FRONTEND_DIR, "assets", "audio")
 
 # --- Face Auth ---

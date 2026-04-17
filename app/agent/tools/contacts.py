@@ -1,11 +1,10 @@
 """
 Contact Management Tools
 Gemini calls these to manage the user's contact list.
+Now using Supabase for cloud persistence.
 """
 
-import sqlite3
-from app.config import DB_PATH
-
+from app.database.db import get_client
 
 def find_contact(name: str) -> str:
     """Search for a contact by name in the phone book.
@@ -15,25 +14,24 @@ def find_contact(name: str) -> str:
         name: The name of the contact to search for
     """
     try:
-        con = sqlite3.connect(DB_PATH)
-        cursor = con.cursor()
-        cursor.execute(
-            "SELECT name, mobile_no, email, address FROM contacts WHERE LOWER(name) LIKE ?",
-            (f"%{name.lower()}%",),
-        )
-        results = cursor.fetchall()
-        con.close()
+        client = get_client()
+        if not client:
+            return "Error: Supabase client not initialized."
+
+        # Search using case-insensitive ilike
+        response = client.table("contacts").select("*").ilike("name", f"%{name}%").execute()
+        results = response.data
 
         if not results:
             return f"No contact found matching '{name}'."
 
         contacts_info = []
         for r in results:
-            info = f"Name: {r[0]}, Phone: {r[1]}"
-            if r[2]:
-                info += f", Email: {r[2]}"
-            if r[3]:
-                info += f", City: {r[3]}"
+            info = f"Name: {r['name']}, Phone: {r['mobile_no']}"
+            if r.get('email'):
+                info += f", Email: {r['email']}"
+            if r.get('city'):
+                info += f", City: {r['city']}"
             contacts_info.append(info)
 
         return "Found contacts:\n" + "\n".join(contacts_info)
@@ -52,14 +50,17 @@ def add_contact(name: str, mobile_no: str, email: str = "", city: str = "") -> s
         city: The contact's city (optional)
     """
     try:
-        con = sqlite3.connect(DB_PATH)
-        cursor = con.cursor()
-        cursor.execute(
-            "INSERT INTO contacts VALUES (?, ?, ?, ?, ?)",
-            (None, name, mobile_no, email, city),
-        )
-        con.commit()
-        con.close()
+        client = get_client()
+        if not client:
+            return "Error: Supabase client not initialized."
+
+        client.table("contacts").insert({
+            "name": name,
+            "mobile_no": mobile_no,
+            "email": email,
+            "city": city
+        }).execute()
+        
         return f"Contact '{name}' added successfully."
     except Exception as e:
         return f"Failed to add contact: {str(e)}"
@@ -70,16 +71,17 @@ def list_contacts() -> str:
     Use this when the user wants to see all their saved contacts.
     """
     try:
-        con = sqlite3.connect(DB_PATH)
-        cursor = con.cursor()
-        cursor.execute("SELECT name, mobile_no FROM contacts ORDER BY name")
-        results = cursor.fetchall()
-        con.close()
+        client = get_client()
+        if not client:
+            return "Error: Supabase client not initialized."
+
+        response = client.table("contacts").select("name, mobile_no").order("name").execute()
+        results = response.data
 
         if not results:
             return "No contacts saved yet."
 
-        contacts_list = [f"{i+1}. {r[0]} — {r[1]}" for i, r in enumerate(results)]
+        contacts_list = [f"{i+1}. {r['name']} — {r['mobile_no']}" for i, r in enumerate(results)]
         return "Your contacts:\n" + "\n".join(contacts_list)
     except Exception as e:
         return f"Error listing contacts: {str(e)}"
