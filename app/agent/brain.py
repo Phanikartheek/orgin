@@ -114,6 +114,8 @@ class JarvisBrain:
             # Build conversation for Gemini
             contents = self.memory.get_gemini_contents()
 
+            loop = asyncio.get_event_loop()
+
             # --- Self-Healing Model Logic ---
             # If the preferred model fails, we attempt to discover any working model
             try:
