@@ -138,9 +138,11 @@ class JarvisBrain:
                     print(f"[Brain] {self.model} not found. Starting auto-discovery...")
                     # Get list of all models
                     models = await loop.run_in_executor(None, lambda: list(self.client.models.list()))
-                    # Pick the first one that supports content generation
+                    
+                    # Pick the first one that supports content generation or has 'gemini' in its name
                     for m in models:
-                        if "generateContent" in m.supported_generation_methods:
+                        methods = getattr(m, 'supported_generation_methods', [])
+                        if "generateContent" in methods or "gemini" in m.name.lower():
                             print(f"[Brain] Auto-switched to working model: {m.name}")
                             self.model = m.name
                             break
