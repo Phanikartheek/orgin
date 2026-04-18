@@ -6,10 +6,19 @@ Loads settings from .env file and provides type-safe access.
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file ONLY if not in cloud
-# This prevents GitHub-pushed .env files from clashing with Render Dashboard settings
-if not (os.getenv("RENDER") or os.getenv("PORT") or os.getenv("K_SERVICE")):
-    load_dotenv()
+# Load environment variables from .env file
+# We call it twice: once for root and once with override=False to ensure all settings are loaded
+load_dotenv()
+
+def check_env_diagnostics():
+    """Print found environment keys for debugging (values are masked)."""
+    keys_to_check = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"]
+    found = []
+    for k in keys_to_check:
+        val = os.getenv(k)
+        if val and len(val) > 4:
+            found.append(f"{k} [FOUND]")
+    return ", ".join(found) if found else "NONE"
 
 # --- API Keys ---
 # We check for multiple variations and CLEAN the key (strip spaces/quotes)

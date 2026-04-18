@@ -10,7 +10,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from app.config import FRONTEND_DIR, HOST, PORT, IS_CLOUD
+from app.config import FRONTEND_DIR, HOST, PORT, IS_CLOUD, check_env_diagnostics
 from app.database.db import get_client
 from app.websocket.handler import manager
 
@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     # --- Startup ---
     print("\n" + "=" * 50)
     print("  🤖 JARVIS AI Assistant — Starting Up")
+    print(f"  🔍 Status: {check_env_diagnostics()}")
     print("=" * 50)
     
     try:

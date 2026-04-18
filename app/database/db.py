@@ -15,10 +15,9 @@ def init_client():
     global _supabase_client
     
     # Check for missing OR placeholder strings
-    placeholders = ["your_project_url_here", "your_service_role_key_here", "your_project_id", ""]
-    
-    if not SUPABASE_URL or SUPABASE_URL in placeholders or not SUPABASE_KEY or SUPABASE_KEY in placeholders:
-        print("[DB] Warning: SUPABASE_URL or SUPABASE_KEY missing or invalid placeholder. Client not initialized.")
+    if not SUPABASE_URL or not SUPABASE_KEY or "supabase.co" not in SUPABASE_URL:
+        print(f"[DB] Warning: SUPABASE_URL or SUPABASE_KEY is missing or invalid. Check your environment settings.")
+        _supabase_client = None
         return
 
     try:
