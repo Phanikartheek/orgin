@@ -30,12 +30,13 @@ Run Jarvis locally to give him full control over your machine:
 ## 🏗️ Technical Architecture
 
 - **AI Brain**: Powered by **Google Gemini 1.5 Flash**, utilizing advanced **Function Calling** to translate natural language into system commands.
+- **3D Visualization**: **Vanta.js** and **Three.js** power the state-of-the-art interactive 3D background that reacts to mouse movement and AI states.
 - **Backend**: **FastAPI** provides a high-concurrency WebSocket server for real-time audio and text streaming.
 - **Database**: **Supabase (PostgreSQL)** handles persistent storage for contacts, personal info, and custom commands.
 - **Voice Pipeline**: 
   - **Speech-to-Text**: Google Recognition API.
   - **Text-to-Speech**: **Edge-TTS** (Microsoft Neural voices) for premium, lifelike audio output.
-- **Frontend**: A custom, "premium" dark-mode interface built with Vanilla JS for maximum speed and responsiveness.
+- **Frontend**: A custom **Cyber Blue & Deep Black** dark-mode interface utilizing **SVG Gooey Filters** for a fluid liquid AI energy core.
 
 ---
 
