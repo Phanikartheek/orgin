@@ -6,7 +6,6 @@ Now using Supabase for contact lookup if only name is provided.
 
 import os
 import webbrowser
-import pywhatkit
 from app.config import IS_CLOUD
 from app.database.db import get_client
 
@@ -43,6 +42,7 @@ def send_whatsapp_message(to: str, message: str) -> str:
         return f"[Cloud Demo Mode] I would have sent a WhatsApp to {to} ({number}): '{message}'"
 
     try:
+        import pywhatkit
         # Using pywhatkit (instantly opens web.whatsapp.com)
         pywhatkit.sendwhatmsg_instantly(number, message, wait_time=10, tab_close=True)
         return f"Sending WhatsApp message to {to} now."
