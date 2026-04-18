@@ -7,7 +7,7 @@ Gemini decides which tool to call based on natural language understanding.
 import asyncio
 from google import genai
 from google.genai import types
-from app.config import GEMINI_API_KEY, ASSISTANT_NAME
+from app.config import GEMINI_API_KEY, ASSISTANT_NAME, IS_CLOUD
 from app.agent.memory import ConversationMemory
 
 # Import all tool functions
@@ -28,9 +28,10 @@ from app.agent.tools.system import (
     take_screenshot,
 )
 
-# System prompt that defines Jarvis's personality and behavior
-SYSTEM_PROMPT = f"""You are {ASSISTANT_NAME}, an advanced AI-powered personal assistant.
-
+def get_system_prompt():
+    """Returns a dynamic system prompt based on the environment."""
+    base_prompt = f"""You are {ASSISTANT_NAME}, an advanced AI-powered personal assistant.
+    
 ## Your Personality:
 - You are intelligent, witty, and helpful — inspired by J.A.R.V.I.S. from Iron Man
 - You address the user as "Sir" occasionally
@@ -38,10 +39,27 @@ SYSTEM_PROMPT = f"""You are {ASSISTANT_NAME}, an advanced AI-powered personal as
 - Be proactive — suggest related actions when appropriate
 
 ## Your Capabilities:
-You have access to tools that let you control the computer and communicate on behalf of the user.
+You have access to tools that let you control the computer and communicate on behalf of the user. 
 Always use the appropriate tool when the user asks you to perform an action.
 If the user is just chatting or asking a question, respond conversationally without using tools.
+"""
 
+    if IS_CLOUD:
+        base_prompt += """
+## IMPORTANT: CLOUD DEMO MODE
+- You are currently running as a WEB DEMONSTRATION on a cloud server (Render).
+- You CANNOT physically open applications, take screenshots, or control the user's local hardware (Notepad, Volume, etc.).
+- When you use a tool and it returns a '[Cloud Demo Mode]' status, you MUST explain this Limitation to the user.
+- Sample response: "Sir, as this is a cloud-based demonstration, I cannot physically control your local machine. However, in a local installation, I have full system control capabilities."
+"""
+    else:
+        base_prompt += """
+## LOCAL MODE
+- You are running locally on the user's machine.
+- You have FULL control over the system. Execute commands immediately.
+"""
+
+    base_prompt += """
 ## Important Rules:
 1. When opening apps/websites, use the appropriate tool — don't just describe how to do it
 2. For music/video requests, always use the play_youtube tool
@@ -51,6 +69,7 @@ If the user is just chatting or asking a question, respond conversationally with
 6. ALWAYS use tools for actions — never just describe steps
 7. If the user asks to "open whatsapp and call...", just use the whatsapp call tool directly. It opens whatsapp automatically.
 """
+    return base_prompt
 
 # Collect all tools into a list
 ALL_TOOLS = [
@@ -125,7 +144,7 @@ class JarvisBrain:
                         model=self.model,
                         contents=contents,
                         config=types.GenerateContentConfig(
-                            system_instruction=SYSTEM_PROMPT,
+                            system_instruction=get_system_prompt(),
                             tools=ALL_TOOLS,
                             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                             temperature=0.7,
@@ -154,8 +173,8 @@ class JarvisBrain:
                             model=self.model,
                             contents=contents,
                             config=types.GenerateContentConfig(
-                                system_instruction=SYSTEM_PROMPT,
-                                tools=ALL_TOOLS,
+                            system_instruction=get_system_prompt(),
+                            tools=ALL_TOOLS,
                                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                                 temperature=0.7,
                                 max_output_tokens=500,
@@ -205,7 +224,7 @@ class JarvisBrain:
                         model=self.model,
                         contents=followup_contents,
                         config=types.GenerateContentConfig(
-                            system_instruction=SYSTEM_PROMPT,
+                            system_instruction=get_system_prompt(),
                             temperature=0.7,
                             max_output_tokens=200,
                         ),
