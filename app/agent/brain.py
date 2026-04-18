@@ -80,19 +80,23 @@ class JarvisBrain:
 
     def __init__(self):
         self.init_error = None
+        self.model = "gemini-1.5-flash"
         try:
-            # If we have a key from our config, use it. 
-            # Otherwise, call Client() without args to let it auto-detect GOOGLE_API_KEY from Render.
+            # Force stable API version (v1) to prevent 404s from the v1beta endpoint
             if GEMINI_API_KEY:
-                self.client = genai.Client(api_key=GEMINI_API_KEY)
+                self.client = genai.Client(
+                    api_key=GEMINI_API_KEY,
+                    http_options=types.HttpOptions(api_version="v1")
+                )
             else:
-                self.client = genai.Client() 
+                self.client = genai.Client(
+                    http_options=types.HttpOptions(api_version="v1")
+                )
         except Exception as e:
             self.init_error = str(e)
             print(f"[Brain Error] Failed to initialize Gemini client: {e}")
             self.client = None
         self.memory = ConversationMemory()
-        self.model = "gemini-1.5-flash-8b"
 
     async def think(self, user_input: str) -> str:
         """
@@ -110,22 +114,52 @@ class JarvisBrain:
             # Build conversation for Gemini
             contents = self.memory.get_gemini_contents()
 
-            # Call Gemini with tools (disable auto-calling so we control execution)
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: self.client.models.generate_content(
-                    model=self.model,
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT,
-                        tools=ALL_TOOLS,
-                        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-                        temperature=0.7,
-                        max_output_tokens=500,
-                    ),
+            # --- Self-Healing Model Logic ---
+            # If the preferred model fails, we attempt to discover any working model
+            try:
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: self.client.models.generate_content(
+                        model=self.model,
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=SYSTEM_PROMPT,
+                            tools=ALL_TOOLS,
+                            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                            temperature=0.7,
+                            max_output_tokens=500,
+                        ),
+                    )
                 )
-            )
+            except Exception as e:
+                if "404" in str(e) or "not found" in str(e).lower():
+                    print(f"[Brain] {self.model} not found. Starting auto-discovery...")
+                    # Get list of all models
+                    models = await loop.run_in_executor(None, lambda: list(self.client.models.list()))
+                    # Pick the first one that supports content generation
+                    for m in models:
+                        if "generateContent" in m.supported_generation_methods:
+                            print(f"[Brain] Auto-switched to working model: {m.name}")
+                            self.model = m.name
+                            break
+                    
+                    # Retry once with the discovered model
+                    response = await loop.run_in_executor(
+                        None,
+                        lambda: self.client.models.generate_content(
+                            model=self.model,
+                            contents=contents,
+                            config=types.GenerateContentConfig(
+                                system_instruction=SYSTEM_PROMPT,
+                                tools=ALL_TOOLS,
+                                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                                temperature=0.7,
+                                max_output_tokens=500,
+                            ),
+                        )
+                    )
+                else:
+                    raise e
 
             # Check if Gemini wants to call a function
             if response.function_calls:
