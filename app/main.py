@@ -22,6 +22,7 @@ async def lifespan(app: FastAPI):
     print("\n" + "=" * 50)
     print("  🤖 JARVIS AI Assistant — Starting Up")
     print(f"  🔍 Status: {check_env_diagnostics()}")
+    print(f"  ☁️  Cloud Mode: {'ENABLED' if IS_CLOUD else 'DISABLED'}")
     print("=" * 50)
     
     try:
