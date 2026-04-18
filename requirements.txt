@@ -4,24 +4,24 @@
 # ============================================
 
 # --- Core Backend ---
-fastapi>=0.115.0
-uvicorn[standard]>=0.34.0
-python-dotenv>=1.1.0
-websockets>=14.0
-aiofiles>=24.1.0
+fastapi==0.115.0
+uvicorn[standard]==0.34.0
+python-dotenv==1.0.1
+websockets==14.0
+aiofiles==24.1.0
 
 # --- AI Brain ---
-google-genai>=1.14.0
+google-genai==1.14.0
 
 # --- Voice Pipeline ---
-edge-tts>=6.1.0
+edge-tts==6.1.0
 # Removed PyAudio and SpeechRecognition for Render deployment (requires portaudio)
 
 # --- Automation (Optional for Local, Skip for Cloud) ---
-# pywhatkit>=5.4
-# pyautogui>=0.9.54
+# pywhatkit==5.4
+# pyautogui==0.9.54
 
 # --- Utilities ---
-numpy>=1.26.0
-Pillow>=10.0.0
-supabase>=2.10.0
+numpy==1.26.4
+Pillow==10.2.0
+supabase==2.10.0

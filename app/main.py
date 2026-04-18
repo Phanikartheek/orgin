@@ -65,6 +65,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# --- Static Directory Protection ---
+# Git does not track empty directories, but StaticFiles crashes if they are missing.
+# We ensure they exist at startup to prevent RuntimeError.
+for folder in ["assets", "css", "js"]:
+    path = os.path.join(FRONTEND_DIR, folder)
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
+    # Ensure audio subfolder exists for TTS
+    if folder == "assets":
+        os.makedirs(os.path.join(path, "audio"), exist_ok=True)
+
 # Serve frontend static files
 app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
