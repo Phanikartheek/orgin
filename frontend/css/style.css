@@ -5,44 +5,44 @@
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
-    /* Primary Orange Palette */
-    --primary: #FF6B35;
-    --primary-light: #FFB347;
-    --primary-glow: rgba(255, 107, 53, 0.4);
-    --primary-subtle: rgba(255, 107, 53, 0.1);
-    --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #FFB347 100%);
+    /* Primary Cyber Blue Palette */
+    --primary: #00D2FF;
+    --primary-light: #97E9FF;
+    --primary-glow: rgba(0, 210, 255, 0.4);
+    --primary-subtle: rgba(0, 210, 255, 0.1);
+    --gradient-primary: linear-gradient(135deg, #00D2FF 0%, #3A7BD5 100%);
 
-    /* Neutrals */
-    --bg-deep: #0A0A0F;
-    --bg-dark: #111118;
-    --bg-card: rgba(20, 20, 30, 0.6);
-    --bg-glass: rgba(255, 255, 255, 0.04);
-    --bg-glass-hover: rgba(255, 255, 255, 0.08);
+    /* Neutrals - Deep Black & Slate */
+    --bg-deep: #000000;
+    --bg-dark: #08080C;
+    --bg-card: rgba(10, 10, 15, 0.7);
+    --bg-glass: rgba(255, 255, 255, 0.03);
+    --bg-glass-hover: rgba(255, 255, 255, 0.07);
 
     /* Text */
     --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.65);
-    --text-muted: rgba(255, 255, 255, 0.35);
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.4);
 
     /* Borders */
-    --border-glass: rgba(255, 255, 255, 0.08);
-    --border-active: rgba(255, 107, 53, 0.4);
+    --border-glass: rgba(255, 255, 255, 0.05);
+    --border-active: rgba(0, 210, 255, 0.5);
 
     /* Spacing & Sizing */
     --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
-    --radius-full: 50%;
+    --radius-md: 14px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+    --radius-full: 1000px;
 
     /* Fonts */
-    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 
     /* Transitions */
-    --transition-fast: 0.15s ease;
-    --transition-normal: 0.3s ease;
-    --transition-smooth: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.4s ease;
+    --transition-smooth: 0.6s cubic-bezier(0.2, 0, 0.1, 1);
 }
 
 /* --- Reset & Base --- */
@@ -69,60 +69,15 @@ body {
     width: 100vw;
 }
 
-/* --- Background Animated Orbs --- */
-.bg-orbs {
+/* --- 3D Background Engine --- */
+#vanta-bg {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.3;
-    animation: float 20s ease-in-out infinite;
-}
-
-.orb-1 {
-    width: 400px;
-    height: 400px;
-    background: var(--primary);
-    top: -100px;
-    right: -100px;
-    animation-delay: 0s;
-}
-
-.orb-2 {
-    width: 350px;
-    height: 350px;
-    background: var(--primary-light);
-    bottom: -80px;
-    left: -80px;
-    animation-delay: -7s;
-}
-
-.orb-3 {
-    width: 250px;
-    height: 250px;
-    background: #FF8C42;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: -14s;
-    opacity: 0.15;
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(30px, -50px) scale(1.05); }
-    50% { transform: translate(-20px, 30px) scale(0.95); }
-    75% { transform: translate(40px, 20px) scale(1.02); }
+    z-index: -1;
+    background-color: var(--bg-deep);
 }
 
 /* --- App Container --- */
@@ -143,8 +98,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: linear-gradient(90deg, rgba(255, 107, 53, 0.1), rgba(255, 179, 71, 0.1));
-    border: 1px solid rgba(255, 107, 53, 0.2);
+    background: linear-gradient(90deg, rgba(0, 210, 255, 0.1), rgba(0, 122, 255, 0.1));
+    border: 1px solid rgba(0, 210, 255, 0.2);
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     padding: 8px 16px;
     font-size: 0.8rem;
@@ -244,147 +199,93 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 0;
+    padding: 60px 0;
     transition: all var(--transition-smooth);
     flex-shrink: 0;
+    z-index: 5;
 }
 
 .orb-section.minimized {
-    padding: 15px 0;
+    padding: 20px 0;
 }
-
 .ai-orb {
-    width: 160px;
-    height: 160px;
+    width: 220px;
+    height: 220px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all var(--transition-smooth);
+    filter: url('#gooey');
 }
 
 .orb-section.minimized .ai-orb {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
+    filter: none;
 }
 
 .orb-core {
-    width: 40%;
-    height: 40%;
+    width: 60px;
+    height: 60px;
     border-radius: var(--radius-full);
     background: var(--gradient-primary);
-    box-shadow:
-        0 0 30px var(--primary-glow),
-        0 0 60px rgba(255, 107, 53, 0.2),
-        inset 0 0 20px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 40px var(--primary-glow);
     z-index: 2;
     transition: all var(--transition-normal);
 }
 
 .orb-ring {
     position: absolute;
+    width: 50px;
+    height: 50px;
     border-radius: var(--radius-full);
-    border: 1.5px solid;
-    animation: spin 6s linear infinite;
+    background: var(--primary);
+    opacity: 0.8;
 }
 
-.ring-1 {
-    width: 70%;
-    height: 70%;
-    border-color: rgba(255, 107, 53, 0.3);
-    animation-duration: 8s;
-}
+.ring-1 { animation: gooey-move 4s infinite alternate ease-in-out; }
+.ring-2 { animation: gooey-move 6s infinite alternate-reverse ease-in-out; }
+.ring-3 { animation: gooey-move 8s infinite alternate ease-in-out; }
 
-.ring-2 {
-    width: 85%;
-    height: 85%;
-    border-color: rgba(255, 179, 71, 0.2);
-    animation-duration: 12s;
-    animation-direction: reverse;
-}
-
-.ring-3 {
-    width: 100%;
-    height: 100%;
-    border-color: rgba(255, 107, 53, 0.1);
-    animation-duration: 16s;
-}
-
-.pulse-ring {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--radius-full);
-    border: 2px solid var(--primary);
-    opacity: 0;
-    z-index: 1;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@keyframes gooey-move {
+    0% { transform: translate(10px, 10px) scale(1); }
+    100% { transform: translate(-10px, -10px) scale(0.9); }
 }
 
 /* Orb States */
-.ai-orb.listening .orb-core {
-    animation: pulse-glow 1s ease-in-out infinite;
-    box-shadow:
-        0 0 40px var(--primary-glow),
-        0 0 80px rgba(255, 107, 53, 0.3),
-        inset 0 0 25px rgba(255, 255, 255, 0.3);
+.ai-orb.listening {
+    animation: listening-ripple 2s infinite;
 }
 
-.ai-orb.listening .pulse-ring {
-    animation: ripple 1.5s ease-out infinite;
-}
-
-.ai-orb.thinking .orb-core {
-    animation: pulse-think 0.8s ease-in-out infinite;
+@keyframes listening-ripple {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
 
 .ai-orb.thinking .ring-1,
 .ai-orb.thinking .ring-2,
 .ai-orb.thinking .ring-3 {
-    animation-duration: 2s;
+    animation-duration: 1s;
 }
 
 .ai-orb.speaking .orb-core {
-    animation: speak-pulse 0.4s ease-in-out infinite alternate;
-    background: linear-gradient(135deg, #FFB347 0%, #FF6B35 100%);
-}
-
-@keyframes pulse-glow {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-}
-
-@keyframes pulse-think {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(0.9); opacity: 0.7; }
+    animation: speak-pulse 0.3s infinite alternate;
 }
 
 @keyframes speak-pulse {
     from { transform: scale(1); }
-    to { transform: scale(1.1); }
-}
-
-@keyframes ripple {
-    0% {
-        transform: scale(0.8);
-        opacity: 0.6;
-    }
-    100% {
-        transform: scale(1.8);
-        opacity: 0;
-    }
+    to { transform: scale(1.2); }
 }
 
 .orb-label {
-    margin-top: 16px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    font-weight: 400;
-    transition: all var(--transition-normal);
+    margin-top: 24px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
 .orb-section.minimized .orb-label {
@@ -449,25 +350,26 @@ body {
 }
 
 .message-bubble {
-    padding: 10px 16px;
-    border-radius: var(--radius-lg);
-    font-size: 0.9rem;
-    line-height: 1.5;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    line-height: 1.6;
     word-wrap: break-word;
+    border: 1px solid var(--border-glass);
 }
 
 .message.user .message-bubble {
     background: var(--gradient-primary);
     color: white;
     border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .message.assistant .message-bubble {
     background: var(--bg-glass);
     color: var(--text-primary);
-    border: 1px solid var(--border-glass);
     border-bottom-left-radius: 4px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(25px);
 }
 
 @keyframes fadeInUp {
@@ -501,7 +403,7 @@ body {
 
 .input-wrapper:focus-within {
     border-color: var(--border-active);
-    box-shadow: 0 0 30px rgba(255, 107, 53, 0.15);
+    box-shadow: 0 0 30px rgba(0, 210, 255, 0.15);
 }
 
 .chat-input {
@@ -550,7 +452,7 @@ body {
 
 .mic-btn.recording {
     animation: recording-pulse 1s ease-in-out infinite;
-    background: linear-gradient(135deg, #ff3b30 0%, #FF6B35 100%);
+    background: linear-gradient(135deg, #00D2FF 0%, #3A7BD5 100%);
 }
 
 @keyframes recording-pulse {

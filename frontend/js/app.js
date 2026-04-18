@@ -6,6 +6,28 @@
 (function () {
     'use strict';
 
+    // --- Initialize 3D Background (Vanta.js) ---
+    let vantaEffect = null;
+    try {
+        vantaEffect = VANTA.NET({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x00d2ff,
+            backgroundColor: 0x000000,
+            points: 12.00,
+            maxDistance: 22.00,
+            spacing: 16.00
+        });
+    } catch (e) {
+        console.warn('Vanta initialization failed:', e);
+    }
+
     // --- Initialize WebSocket ---
     jarvisWS.connect();
 
@@ -38,6 +60,24 @@
 
             case 'status':
                 ui.setOrbState(data.status);
+                
+                // Update 3D effect based on state
+                if (vantaEffect) {
+                    if (data.status === 'thinking' || data.status === 'speaking') {
+                        vantaEffect.setOptions({
+                            color: 0x97e9ff,
+                            points: 18.00,
+                            spacing: 14.00
+                        });
+                    } else {
+                        vantaEffect.setOptions({
+                            color: 0x00d2ff,
+                            points: 12.00,
+                            spacing: 16.00
+                        });
+                    }
+                }
+
                 if (data.message) {
                     ui.setStatus(`AI Assistant — ${data.message}`);
                 }
