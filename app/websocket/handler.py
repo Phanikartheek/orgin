@@ -10,8 +10,6 @@ from fastapi import WebSocket, WebSocketDisconnect
 from app.agent.brain import JarvisBrain
 from app.voice.stt import SpeechToText
 from app.voice.tts import TextToSpeech
-
-
 from app.config import IS_CLOUD
 
 
@@ -20,16 +18,20 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: list[WebSocket] = []
+        self.brain = None
+        self.stt = None
+        self.tts = None
+
+    def initialize_components(self):
+        """Lazy logic to initialize heavy AI/Voice components."""
         try:
             self.brain = JarvisBrain()
             self.stt = SpeechToText()
             self.tts = TextToSpeech()
+            print("[WS] AI Brain and Voice components initialized.")
         except Exception as e:
             print(f"[WS Error] Failed to initialize connection manager components: {e}")
-            self.brain = None
-            self.stt = None
-            self.tts = None
-    
+
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
@@ -43,7 +45,8 @@ class ConnectionManager:
         })
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
         print("[WS] Client disconnected")
 
     async def send_json(self, websocket: WebSocket, data: dict):
@@ -51,28 +54,27 @@ class ConnectionManager:
 
     async def handle_message(self, websocket: WebSocket, data: dict):
         """Process incoming WebSocket messages."""
+        if not self.brain:
+            self.initialize_components()
+
         msg_type = data.get("type", "")
 
         if msg_type == "text_input":
-            # User sent text via chat box — NO TTS (instant response)
             user_text = data.get("text", "").strip()
             if user_text:
                 await self._process_query(websocket, user_text, speak=False)
 
         elif msg_type == "voice_input":
-            # User pressed mic button — start listening, SPEAK response
             await self.send_json(websocket, {
                 "type": "status",
                 "status": "listening",
                 "message": "Listening..."
             })
 
-            # Run STT in a thread (it's blocking)
             loop = asyncio.get_event_loop()
             user_text = await loop.run_in_executor(None, self.stt.listen)
 
             if user_text:
-                # Send the transcribed text to frontend
                 await self.send_json(websocket, {
                     "type": "user_message",
                     "text": user_text
@@ -86,7 +88,8 @@ class ConnectionManager:
                 })
 
         elif msg_type == "reset_memory":
-            self.brain.reset_memory()
+            if self.brain:
+                self.brain.reset_memory()
             await self.send_json(websocket, {
                 "type": "status",
                 "status": "idle",
@@ -103,7 +106,7 @@ class ConnectionManager:
                 "message": "Processing..."
             })
 
-            # Get AI response (runs Gemini with function calling)
+            # Get AI response
             response_text = await self.brain.think(query)
 
             # Send the text response to frontend
@@ -113,7 +116,7 @@ class ConnectionManager:
             })
 
             # Only generate TTS audio if voice input was used
-            if speak:
+            if speak and self.tts:
                 await self.send_json(websocket, {
                     "type": "status",
                     "status": "speaking",
@@ -150,5 +153,5 @@ class ConnectionManager:
             })
 
 
-# Global connection manager instance
+# Global connection manager instance (initialized lazily)
 manager = ConnectionManager()

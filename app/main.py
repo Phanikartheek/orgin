@@ -24,7 +24,11 @@ async def lifespan(app: FastAPI):
     print("=" * 50)
     
     try:
-        # Check Supabase connection
+        # Initialize Supabase explicitly
+        from app.database.db import init_client
+        init_client()
+        
+        # Check connection
         client = get_client()
         if client:
             print("[DB] Supabase connected.")
@@ -33,6 +37,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[Startup Error] Database connectivity issue: {e}")
         print("Continuing startup anyway...")
+
+    # Initialize manager components (lazy)
+    try:
+        manager.initialize_components()
+    except Exception as e:
+        print(f"[Startup Error] Manager initialization failed: {e}")
 
     print(f"  🌐 Server running on: http://{HOST}:{PORT}")
     if IS_CLOUD:
