@@ -6,8 +6,10 @@ Loads settings from .env file and provides type-safe access.
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file ONLY if not in cloud
+# This prevents GitHub-pushed .env files from clashing with Render Dashboard settings
+if not (os.getenv("RENDER") or os.getenv("PORT") or os.getenv("K_SERVICE")):
+    load_dotenv()
 
 # --- API Keys ---
 # We check for multiple variations and CLEAN the key (strip spaces/quotes)
