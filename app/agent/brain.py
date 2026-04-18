@@ -92,7 +92,7 @@ class JarvisBrain:
             print(f"[Brain Error] Failed to initialize Gemini client: {e}")
             self.client = None
         self.memory = ConversationMemory()
-        self.model = "gemini-1.5-flash"
+        self.model = "gemini-2.0-flash"
 
     async def think(self, user_input: str) -> str:
         """
