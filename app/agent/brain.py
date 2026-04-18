@@ -79,9 +79,12 @@ class JarvisBrain:
     """The AI brain that processes user queries and decides actions."""
 
     def __init__(self):
+        self.init_error = None
         try:
+            # Explicitly force the client to use the Gemini API (not Vertex AI)
             self.client = genai.Client(api_key=GEMINI_API_KEY)
         except Exception as e:
+            self.init_error = str(e)
             print(f"[Brain Error] Failed to initialize Gemini client: {e}")
             self.client = None
         self.memory = ConversationMemory()
@@ -94,7 +97,7 @@ class JarvisBrain:
         """
         # Safety Check: If client failed to initialize (usually due to missing API Key)
         if not self.client:
-            return "Sir, I am unable to connect to my AI brain. Please ensure the GEMINI_API_KEY is correctly configured in your environment settings."
+            return f"Sir, I am unable to connect to my AI brain. Error: {self.init_error or 'Unknown initialization failure'}. Please check your GEMINI_API_KEY in Render."
 
         # Add user message to memory
         self.memory.add_message("user", user_input)
