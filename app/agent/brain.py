@@ -81,8 +81,12 @@ class JarvisBrain:
     def __init__(self):
         self.init_error = None
         try:
-            # Explicitly force the client to use the Gemini API (not Vertex AI)
-            self.client = genai.Client(api_key=GEMINI_API_KEY)
+            # If we have a key from our config, use it. 
+            # Otherwise, call Client() without args to let it auto-detect GOOGLE_API_KEY from Render.
+            if GEMINI_API_KEY:
+                self.client = genai.Client(api_key=GEMINI_API_KEY)
+            else:
+                self.client = genai.Client() 
         except Exception as e:
             self.init_error = str(e)
             print(f"[Brain Error] Failed to initialize Gemini client: {e}")
