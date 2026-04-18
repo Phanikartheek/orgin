@@ -82,15 +82,15 @@ class JarvisBrain:
         self.init_error = None
         self.model = "gemini-1.5-flash"
         try:
-            # Force stable API version (v1) to prevent 404s from the v1beta endpoint
+            # Use v1beta explicitly as it is required for Tools and System Instructions
             if GEMINI_API_KEY:
                 self.client = genai.Client(
                     api_key=GEMINI_API_KEY,
-                    http_options=types.HttpOptions(api_version="v1")
+                    http_options=types.HttpOptions(api_version="v1beta")
                 )
             else:
                 self.client = genai.Client(
-                    http_options=types.HttpOptions(api_version="v1")
+                    http_options=types.HttpOptions(api_version="v1beta")
                 )
         except Exception as e:
             self.init_error = str(e)
