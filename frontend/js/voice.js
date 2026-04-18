@@ -21,6 +21,18 @@ class VoiceManager {
             });
         }
 
+        // --- Mic Button ---
+        const micBtn = document.getElementById('micBtn');
+        let isCloudMode = false;
+
+        // Handle incoming WebSocket messages
+        jarvisWS.onMessage((data) => {
+            if (data.type === 'connection_info') {
+                isCloudMode = data.is_cloud;
+            }
+            // ... rest of the handler logic will be merged by the tool ...
+        });
+
         this.onPlaybackEnd = () => {}; // Override in app.js
     }
 
@@ -47,5 +59,55 @@ class VoiceManager {
     }
 }
 
-// Global instance
+/**
+ * Browser Speech Recognition Module
+ * Uses Web Speech API for Cloud Demo mode.
+ */
+class BrowserSpeechRecognizer {
+    constructor() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            this.recognition = new SpeechRecognition();
+            this.recognition.continuous = false;
+            this.recognition.interimResults = false;
+            this.recognition.lang = 'en-US';
+
+            this.onResult = (text) => {};
+            this.onStart = () => {};
+            this.onEnd = () => {};
+
+            this.recognition.onstart = () => this.onStart();
+            this.recognition.onend = () => this.onEnd();
+            this.recognition.onerror = (e) => {
+                console.error('[Speech] Error:', e);
+                this.onEnd();
+            };
+            this.recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                this.onResult(text);
+            };
+        } else {
+            this.recognition = null;
+        }
+    }
+
+    start() {
+        if (this.recognition) {
+            try {
+                this.recognition.start();
+            } catch (e) {
+                console.warn('[Speech] Already started');
+            }
+        } else {
+            ui.showToast('Speech recognition not supported in this browser.', 5000);
+        }
+    }
+
+    stop() {
+        if (this.recognition) this.recognition.stop();
+    }
+}
+
+// Global instances
 const voiceManager = new VoiceManager();
+const speechRecognizer = new BrowserSpeechRecognizer();

@@ -8,6 +8,7 @@
 
     // --- Initialize 3D Background (Vanta.js) ---
     let vantaEffect = null;
+    let isCloudMode = false;
     try {
         vantaEffect = VANTA.NET({
             el: "#vanta-bg",
@@ -46,7 +47,8 @@
                 break;
 
             case 'connection_info':
-                if (data.is_cloud) {
+                isCloudMode = !!data.is_cloud;
+                if (isCloudMode) {
                     ui.setStatus('AI Assistant — Web Demo');
                     document.getElementById('demoModeBanner').classList.remove('hidden');
                 } else {
@@ -87,13 +89,7 @@
                 break;
 
             case 'user_message':
-                if (data.text === "voice_input_disabled") {
-                    ui.showToast('Voice input is disabled in Web Demo. Please type your message.', 5000);
-                    ui.setOrbState('idle');
-                    ui.setStatus('AI Assistant — Web Demo');
-                } else {
-                    ui.addUserMessage(data.text);
-                }
+                ui.addUserMessage(data.text);
                 break;
 
             case 'assistant_message':
@@ -111,9 +107,24 @@
         }
     });
 
-    // --- Voice playback end handler ---
+    // --- Voice Recognition Setup ---
     voiceManager.onPlaybackEnd = () => {
         ui.setOrbState('idle');
+    };
+
+    speechRecognizer.onStart = () => {
+        ui.setOrbState('listening');
+        ui.setStatus('AI Assistant — Listening...');
+    };
+
+    speechRecognizer.onEnd = () => {
+        ui.setOrbState('idle');
+        ui.setStatus(isCloudMode ? 'AI Assistant — Web Demo' : 'AI Assistant — Connected');
+    };
+
+    speechRecognizer.onResult = (text) => {
+        ui.addUserMessage(text);
+        jarvisWS.sendText(text);
     };
 
     // --- Mic Button ---
@@ -122,7 +133,12 @@
             ui.showToast('Not connected to server');
             return;
         }
-        jarvisWS.sendVoiceRequest();
+
+        if (isCloudMode) {
+            speechRecognizer.start();
+        } else {
+            jarvisWS.sendVoiceRequest();
+        }
     });
 
     // --- Send Button ---
