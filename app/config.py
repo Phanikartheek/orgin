@@ -10,7 +10,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- API Keys ---
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+# We check for multiple variations of the key name for maximum compatibility
+GEMINI_API_KEY: str = (
+    os.getenv("GEMINI_API_KEY") or 
+    os.getenv("GOOGLE_API_KEY") or 
+    os.getenv("API_KEY") or 
+    ""
+)
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
 
