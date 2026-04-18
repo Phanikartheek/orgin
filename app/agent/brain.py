@@ -92,6 +92,10 @@ class JarvisBrain:
         Process user input through Gemini with function calling.
         Returns the assistant's text response.
         """
+        # Safety Check: If client failed to initialize (usually due to missing API Key)
+        if not self.client:
+            return "Sir, I am unable to connect to my AI brain. Please ensure the GEMINI_API_KEY is correctly configured in your environment settings."
+
         # Add user message to memory
         self.memory.add_message("user", user_input)
 
