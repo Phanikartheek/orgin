@@ -10,15 +10,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- API Keys ---
-# We check for multiple variations of the key name for maximum compatibility
-GEMINI_API_KEY: str = (
+# We check for multiple variations and CLEAN the key (strip spaces/quotes)
+_raw_key = (
     os.getenv("GEMINI_API_KEY") or 
     os.getenv("GOOGLE_API_KEY") or 
     os.getenv("API_KEY") or 
     ""
 )
-SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+GEMINI_API_KEY: str = _raw_key.strip().replace('"', '').replace("'", "")
+
+SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
 # --- Assistant Settings ---
 ASSISTANT_NAME: str = os.getenv("ASSISTANT_NAME", "Jarvis")
