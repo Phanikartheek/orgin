@@ -24,6 +24,21 @@ async def lifespan(app: FastAPI):
     print(f"  Status: {check_env_diagnostics()}")
     print(f"  Cloud Mode: {'ENABLED' if IS_CLOUD else 'DISABLED'}")
     print("=" * 50)
+
+    # --- Face Authentication (Local Only) ---
+    if not IS_CLOUD:
+        print("\n[Auth] Face authentication required...")
+        try:
+            from app.auth.face_auth import authenticate_face
+            authenticated = authenticate_face()
+            if authenticated:
+                print("[Auth] Face verified! Welcome, Sir.")
+            else:
+                print("[Auth] Face authentication FAILED. Access denied.")
+                import sys
+                sys.exit(1)
+        except Exception as e:
+            print(f"[Auth] Face auth error: {e}. Allowing access anyway.")
     
     try:
         # Initialize Supabase explicitly
@@ -57,6 +72,7 @@ async def lifespan(app: FastAPI):
 
     # --- Shutdown ---
     print("\n[Server] Jarvis shutting down. Goodbye, Sir.")
+
 
 
 # Create FastAPI app
