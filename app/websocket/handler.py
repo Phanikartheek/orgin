@@ -37,12 +37,30 @@ class ConnectionManager:
         self.active_connections.append(websocket)
         print("[WS] Client connected")
 
+        # Initialize components if needed
+        if not self.brain:
+            self.initialize_components()
+
         # Send server capabilities/info
         await self.send_json(websocket, {
             "type": "connection_info",
             "is_cloud": IS_CLOUD,
             "message": "Welcome to Jarvis Web Demo" if IS_CLOUD else "Jarvis is ready, Sir."
         })
+
+        # Auto-greet with voice
+        greeting = "Hello Sir, I am Jarvis, your AI assistant. How can I help you today?"
+        await self.send_json(websocket, {
+            "type": "assistant_message",
+            "text": greeting
+        })
+        if self.tts:
+            audio_path = await self.tts.synthesize(greeting)
+            if audio_path:
+                await self.send_json(websocket, {
+                    "type": "play_audio",
+                    "audio_url": audio_path
+                })
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
@@ -62,7 +80,17 @@ class ConnectionManager:
         if msg_type == "text_input":
             user_text = data.get("text", "").strip()
             if user_text:
-                await self._process_query(websocket, user_text, speak=False)
+                await self._process_query(websocket, user_text, speak=True)
+
+        elif msg_type == "browser_voice_input":
+            # Voice text sent from browser speech recognition
+            user_text = data.get("text", "").strip()
+            if user_text:
+                await self.send_json(websocket, {
+                    "type": "user_message",
+                    "text": user_text
+                })
+                await self._process_query(websocket, user_text, speak=True)
 
         elif msg_type == "voice_input":
             await self.send_json(websocket, {
@@ -115,8 +143,8 @@ class ConnectionManager:
                 "text": response_text
             })
 
-            # Only generate TTS audio if voice input was used
-            if speak and self.tts:
+            # Always generate TTS audio (voice-first experience)
+            if self.tts:
                 await self.send_json(websocket, {
                     "type": "status",
                     "status": "speaking",
@@ -133,11 +161,15 @@ class ConnectionManager:
 
                 self.tts.cleanup_old_files()
 
-            # Return to idle
+            # Return to idle and signal frontend to auto-listen
             await self.send_json(websocket, {
                 "type": "status",
                 "status": "idle",
                 "message": ""
+            })
+            # Tell frontend to start listening again after speaking
+            await self.send_json(websocket, {
+                "type": "auto_listen"
             })
 
         except Exception as e:

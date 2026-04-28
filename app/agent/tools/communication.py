@@ -56,8 +56,26 @@ def make_whatsapp_call(to: str) -> str:
     if IS_CLOUD:
         return f"[Cloud Demo Mode] I would have started a WhatsApp audio call to {to}."
     
-    # Simplified logic for demo
-    return f"Attempting to call {to} on WhatsApp..."
+    try:
+        # Clean number - remove spaces, dashes
+        clean_number = number.replace(" ", "").replace("-", "")
+        if not clean_number.startswith("+"):
+            clean_number = "+91" + clean_number  # Default to India
+        
+        # Try opening WhatsApp desktop app for call
+        # First open the chat, then user can click call
+        whatsapp_url = f"https://wa.me/{clean_number.replace('+', '')}"
+        webbrowser.open(whatsapp_url)
+        
+        # Also try the WhatsApp desktop protocol
+        try:
+            os.startfile(f"whatsapp://send?phone={clean_number.replace('+', '')}")
+        except Exception:
+            pass
+        
+        return f"Opening WhatsApp for {to}. Please click the call button to start the voice call."
+    except Exception as e:
+        return f"Failed to open WhatsApp call: {str(e)}"
 
 
 def make_whatsapp_video_call(to: str) -> str:
@@ -66,16 +84,38 @@ def make_whatsapp_video_call(to: str) -> str:
     if IS_CLOUD:
         return f"[Cloud Demo Mode] I would have started a WhatsApp video call to {to}."
     
-    return f"Attempting video call to {to} on WhatsApp..."
+    try:
+        clean_number = number.replace(" ", "").replace("-", "")
+        if not clean_number.startswith("+"):
+            clean_number = "+91" + clean_number
+        
+        whatsapp_url = f"https://wa.me/{clean_number.replace('+', '')}"
+        webbrowser.open(whatsapp_url)
+        
+        try:
+            os.startfile(f"whatsapp://send?phone={clean_number.replace('+', '')}")
+        except Exception:
+            pass
+        
+        return f"Opening WhatsApp for {to}. Please click the video call button to start."
+    except Exception as e:
+        return f"Failed to open WhatsApp video call: {str(e)}"
 
 
 def make_phone_call(to: str) -> str:
-    """Make a regular phone call."""
+    """Make a regular phone call using the default phone app."""
     number = _get_number(to)
     if IS_CLOUD:
         return f"[Cloud Demo Mode] I would have made a phone call to {to}."
     
-    return f"Calling {to}..."
+    try:
+        clean_number = number.replace(" ", "").replace("-", "")
+        if not clean_number.startswith("+"):
+            clean_number = "+91" + clean_number
+        webbrowser.open(f"tel:{clean_number}")
+        return f"Initiating phone call to {to}."
+    except Exception as e:
+        return f"Failed to make phone call: {str(e)}"
 
 
 def send_sms(to: str, message: str) -> str:
@@ -84,4 +124,12 @@ def send_sms(to: str, message: str) -> str:
     if IS_CLOUD:
         return f"[Cloud Demo Mode] I would have sent an SMS to {to}: '{message}'"
     
-    return f"Sending SMS to {to}: {message[:20]}..."
+    try:
+        clean_number = number.replace(" ", "").replace("-", "")
+        if not clean_number.startswith("+"):
+            clean_number = "+91" + clean_number
+        webbrowser.open(f"sms:{clean_number}?body={message}")
+        return f"Opening SMS for {to}."
+    except Exception as e:
+        return f"Failed to send SMS: {str(e)}"
+

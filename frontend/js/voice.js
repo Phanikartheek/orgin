@@ -1,7 +1,6 @@
 /**
  * Voice Module
- * Handles TTS audio playback.
- * Mic input is handled server-side via WebSocket.
+ * Handles TTS audio playback and Browser Speech Recognition.
  */
 
 class VoiceManager {
@@ -21,18 +20,6 @@ class VoiceManager {
             });
         }
 
-        // --- Mic Button ---
-        const micBtn = document.getElementById('micBtn');
-        let isCloudMode = false;
-
-        // Handle incoming WebSocket messages
-        jarvisWS.onMessage((data) => {
-            if (data.type === 'connection_info') {
-                isCloudMode = data.is_cloud;
-            }
-            // ... rest of the handler logic will be merged by the tool ...
-        });
-
         this.onPlaybackEnd = () => {}; // Override in app.js
     }
 
@@ -47,6 +34,7 @@ class VoiceManager {
         this.audioElement.play().catch(err => {
             console.error('[Voice] Playback error:', err);
             this.isPlaying = false;
+            this.onPlaybackEnd();
         });
     }
 
@@ -61,7 +49,7 @@ class VoiceManager {
 
 /**
  * Browser Speech Recognition Module
- * Uses Web Speech API for Cloud Demo mode.
+ * Uses Web Speech API for voice input.
  */
 class BrowserSpeechRecognizer {
     constructor() {
@@ -70,24 +58,36 @@ class BrowserSpeechRecognizer {
             this.recognition = new SpeechRecognition();
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
-            this.recognition.lang = 'en-US';
+            this.recognition.lang = 'en-IN'; // English India for better recognition
 
             this.onResult = (text) => {};
             this.onStart = () => {};
             this.onEnd = () => {};
 
-            this.recognition.onstart = () => this.onStart();
-            this.recognition.onend = () => this.onEnd();
+            this.recognition.onstart = () => {
+                console.log('[Speech] Recognition started');
+                this.onStart();
+            };
+            this.recognition.onend = () => {
+                console.log('[Speech] Recognition ended');
+                this.onEnd();
+            };
             this.recognition.onerror = (e) => {
-                console.error('[Speech] Error:', e);
+                console.error('[Speech] Error:', e.error);
+                // Don't trigger onEnd for 'no-speech' - just retry
+                if (e.error === 'no-speech') {
+                    console.log('[Speech] No speech detected, ready for retry');
+                }
                 this.onEnd();
             };
             this.recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript;
+                console.log('[Speech] Heard:', text);
                 this.onResult(text);
             };
         } else {
             this.recognition = null;
+            console.warn('[Speech] Web Speech API not supported in this browser');
         }
     }
 
@@ -95,11 +95,15 @@ class BrowserSpeechRecognizer {
         if (this.recognition) {
             try {
                 this.recognition.start();
+                console.log('[Speech] Attempting to start...');
             } catch (e) {
-                console.warn('[Speech] Already started');
+                console.warn('[Speech] Already started or error:', e);
             }
         } else {
-            ui.showToast('Speech recognition not supported in this browser.', 5000);
+            console.error('[Speech] Speech recognition not available');
+            if (typeof ui !== 'undefined') {
+                ui.showToast('Speech recognition not supported. Use Chrome browser.', 5000);
+            }
         }
     }
 

@@ -43,7 +43,7 @@ class UIManager {
                 this.micBtn.classList.remove('recording');
                 break;
             default: // idle
-                this.orbLabel.textContent = 'Tap the mic or type a message';
+                this.orbLabel.textContent = 'Listening for your command...';
                 this.micBtn.classList.remove('recording');
                 break;
         }

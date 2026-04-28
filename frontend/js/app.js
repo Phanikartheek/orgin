@@ -1,6 +1,6 @@
 /**
  * Jarvis AI Assistant — Main Application
- * Wires together WebSocket, Voice, UI, and Settings.
+ * Voice-first: auto-greet, auto-listen, voice-to-voice loop.
  */
 
 (function () {
@@ -9,6 +9,9 @@
     // --- Initialize 3D Background (Vanta.js) ---
     let vantaEffect = null;
     let isCloudMode = false;
+    let autoListenEnabled = true; // Voice-to-voice mode ON by default
+    let isProcessing = false;
+
     try {
         vantaEffect = VANTA.NET({
             el: "#vanta-bg",
@@ -41,7 +44,6 @@
                     ui.showToast('Connected to Jarvis');
                 } else {
                     ui.setStatus('AI Assistant — Disconnected');
-                    // Hide demo banner on disconnect
                     document.getElementById('demoModeBanner').classList.add('hidden');
                 }
                 break;
@@ -62,7 +64,7 @@
 
             case 'status':
                 ui.setOrbState(data.status);
-                
+
                 // Update 3D effect based on state
                 if (vantaEffect) {
                     if (data.status === 'thinking' || data.status === 'speaking') {
@@ -85,6 +87,7 @@
                 }
                 if (data.status === 'idle') {
                     ui.setStatus('AI Assistant — Ready');
+                    isProcessing = false;
                 }
                 break;
 
@@ -100,12 +103,49 @@
                 voiceManager.playAudio(data.audio_url);
                 break;
 
+            case 'auto_listen':
+                // After Jarvis finishes speaking, auto-listen for next command
+                // Wait for audio to finish first
+                if (autoListenEnabled) {
+                    waitForAudioThenListen();
+                }
+                break;
+
             case 'error':
                 ui.showToast(data.message, 5000);
                 ui.setOrbState('idle');
+                isProcessing = false;
                 break;
         }
     });
+
+    // --- Wait for TTS audio to finish, then start listening ---
+    function waitForAudioThenListen() {
+        // Check if audio is currently playing
+        const checkInterval = setInterval(() => {
+            if (!voiceManager.isPlaying) {
+                clearInterval(checkInterval);
+                // Small delay after audio ends before listening
+                setTimeout(() => {
+                    if (autoListenEnabled && !isProcessing) {
+                        startListening();
+                    }
+                }, 500);
+            }
+        }, 200);
+
+        // Safety timeout - don't wait forever
+        setTimeout(() => clearInterval(checkInterval), 30000);
+    }
+
+    // --- Start Listening (Browser Speech Recognition) ---
+    function startListening() {
+        if (!jarvisWS.isConnected) return;
+        if (isProcessing) return;
+
+        // Always use browser speech recognition for speed
+        speechRecognizer.start();
+    }
 
     // --- Voice Recognition Setup ---
     voiceManager.onPlaybackEnd = () => {
@@ -118,30 +158,31 @@
     };
 
     speechRecognizer.onEnd = () => {
-        ui.setOrbState('idle');
-        ui.setStatus(isCloudMode ? 'AI Assistant — Web Demo' : 'AI Assistant — Connected');
+        if (!isProcessing) {
+            ui.setOrbState('idle');
+            ui.setStatus('AI Assistant — Ready');
+        }
     };
 
     speechRecognizer.onResult = (text) => {
-        ui.addUserMessage(text);
-        jarvisWS.sendText(text);
+        if (text && text.trim()) {
+            isProcessing = true;
+            ui.addUserMessage(text);
+            // Send as browser_voice_input for voice-to-voice flow
+            jarvisWS.send({ type: 'browser_voice_input', text: text });
+        }
     };
 
-    // --- Mic Button ---
+    // --- Mic Button (manual trigger) ---
     document.getElementById('micBtn').addEventListener('click', () => {
         if (!jarvisWS.isConnected) {
             ui.showToast('Not connected to server');
             return;
         }
-
-        if (isCloudMode) {
-            speechRecognizer.start();
-        } else {
-            jarvisWS.sendVoiceRequest();
-        }
+        startListening();
     });
 
-    // --- Send Button ---
+    // --- Send Button (text fallback) ---
     document.getElementById('sendBtn').addEventListener('click', () => {
         sendTextMessage();
     });
@@ -173,6 +214,7 @@
             return;
         }
 
+        isProcessing = true;
         ui.addUserMessage(text);
         jarvisWS.sendText(text);
         ui.clearInput();
@@ -189,10 +231,10 @@
     document.addEventListener('keyup', (e) => {
         if (e.key === 'j' && e.metaKey) {
             if (jarvisWS.isConnected) {
-                jarvisWS.sendVoiceRequest();
+                startListening();
             }
         }
     });
 
-    console.log('🤖 Jarvis AI Assistant initialized');
+    console.log('Jarvis AI Assistant initialized — Voice Mode Active');
 })();

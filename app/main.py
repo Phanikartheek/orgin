@@ -20,9 +20,9 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     # --- Startup ---
     print("\n" + "=" * 50)
-    print("  🤖 JARVIS AI Assistant — Starting Up")
-    print(f"  🔍 Status: {check_env_diagnostics()}")
-    print(f"  ☁️  Cloud Mode: {'ENABLED' if IS_CLOUD else 'DISABLED'}")
+    print("  JARVIS AI Assistant - Starting Up")
+    print(f"  Status: {check_env_diagnostics()}")
+    print(f"  Cloud Mode: {'ENABLED' if IS_CLOUD else 'DISABLED'}")
     print("=" * 50)
     
     try:
@@ -46,11 +46,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[Startup Error] Manager initialization failed: {e}")
 
-    print(f"  🌐 Server running on: http://{HOST}:{PORT}")
+    print(f"  Server running on: http://{HOST}:{PORT}")
     if IS_CLOUD:
-        print("  ☁️  Cloud environment detected (Render/Production)")
+        print("  Cloud environment detected (Render/Production)")
     else:
-        print("  🏠 Local environment detected")
+        print("  Local environment detected")
     print("=" * 50 + "\n")
 
     yield
